@@ -552,7 +552,7 @@ export interface globalSaveType {
     format: [string, string]
     theme: null | number
     fontSize: number
-    /** Status[0], Mouse events[1], Enable zoom[2] */
+    /** Status[0], Mouse events[1], Enable zoom[2], Fix inputs[3] */
     MDSettings: boolean[]
     /** Status[0], Keep tabindex on Upgrades[1] */
     SRSettings: boolean[]

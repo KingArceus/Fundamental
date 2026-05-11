@@ -777,7 +777,6 @@ try { //Start everything
         specialHTML.styleSheet.textContent += ` html.noTextSelection, img, input[type = "image"], button, #load, a, #notifications > p, #globalStats { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; } /* Safari junk to disable image hold menu and text selection */
             #themeArea > div > div { position: unset; display: flex; width: 15em; }
             #themeArea > div > button { display: none; } /* More Safari junk to make windows work without focus */`;
-        (getId('file') as HTMLInputElement).accept = ''; //Accept for unknown reason not properly supported on phones
         global.debug.MDStrangePage = 1;
 
         for (let i = 0; i <= 2; i++) {
@@ -827,10 +826,12 @@ try { //Start everything
         MDToggle1.innerHTML = '<label>Keep mouse events<button type="button" id="MDToggle1" class="specialToggle">OFF</button></label>';
         const MDToggle2 = document.createElement('li');
         MDToggle2.innerHTML = '<label>Allow zoom<button type="button" id="MDToggle2" class="specialToggle">OFF</button></label>';
-        getId('MDLi').after(MDToggle1, MDToggle2);
+        const MDToggle3 = document.createElement('li');
+        MDToggle3.innerHTML = '<label>Fix import and inputs<button type="button" id="MDToggle3" class="specialToggle">OFF</button></label>';
+        getId('MDLi').after(MDToggle1, MDToggle3, MDToggle2);
         for (let i = 1; i < globalSaveStart.MDSettings.length; i++) {
             getId(`MDToggle${i}`).addEventListener('click', () => {
-                toggleSpecial(i, 'mobile', true, i === 1);
+                toggleSpecial(i, 'mobile', true, i === 1 || i === 3);
                 if (i === 2) {
                     (getId('viewportMeta') as HTMLMetaElement).content = `width=device-width${globalSave.MDSettings[2] ? '' : ', minimum-scale=1.0, maximum-scale=1.0'}, initial-scale=1.0`;
                 }
@@ -838,6 +839,12 @@ try { //Start everything
             toggleSpecial(i, 'mobile');
         }
         if (globalSave.MDSettings[2]) { (getId('viewportMeta') as HTMLMetaElement).content = 'width=device-width, initial-scale=1.0'; }
+        if (globalSave.MDSettings[3]) {
+            (getId('file') as HTMLInputElement).accept = ''; //Accept for unknown reason not properly supported on phones
+            (getId('vaporizationInputMax') as HTMLInputElement).type = 'text'; //Some browsers ignore inputmode
+            (getId('collapseAddNewPoint') as HTMLInputElement).type = 'text';
+            (getId('collapseInputWait') as HTMLInputElement).type = 'text';
+        }
     }
     if (globalSave.SRSettings[0]) {
         const message = getId('SRMessage1');

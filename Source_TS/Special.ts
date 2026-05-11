@@ -55,7 +55,7 @@ export const globalSave: globalSaveType = {
     format: ['.', ''],
     theme: null,
     fontSize: 16,
-    MDSettings: [false, false, false],
+    MDSettings: [false, false, false, false],
     SRSettings: [false, false],
     developerMode: false
 };
