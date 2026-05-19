@@ -1,5 +1,5 @@
-import { assignHotkeys, detectShift, removeHotkey } from './Hotkeys';
-import { cloneArray, deepClone, getClass, getId, getQuery, globalSaveStart, pauseGame, playerStart } from './Main';
+import { assignHotkeys, detectShift, hotkeys } from './Hotkeys';
+import { deepClone, getClass, getId, getQuery, globalSaveStart, pauseGame, playerStart } from './Main';
 import { global, player, prepareVacuum, updatePlayer } from './Player';
 import { assignResetInformation, setActiveStage, toggleChallengeType } from './Stage';
 import type { Quantum, globalSaveType, hotkeysList, numbersList } from './Types';
@@ -11,62 +11,53 @@ export const globalSave: globalSaveType = {
         visual: 800,
         autoSave: 20000
     },
-    hotkeys: {
-        makeAll: ['M', 'M'],
-        toggleAll: ['Shift A', 'Shift A'],
-        createAll: ['U', 'U'],
-        toggleUpgrades: ['None', 'None'],
-        strangeness: ['None', 'None'],
-        toggleStrangeness: ['None', 'None'],
-        discharge: ['D', 'D'],
-        toggleDischarge: ['None', 'None'],
-        vaporization: ['V', 'V'],
-        toggleVaporization: ['None', 'None'],
-        rank: ['R', 'R'],
-        toggleRank: ['None', 'None'],
-        collapse: ['C', 'C'],
-        toggleCollapse: ['None', 'None'],
-        galaxy: ['G', 'G'],
-        merge: ['Shift M', 'Shift M'],
-        toggleMerge: ['None', 'None'],
-        nucleation: ['N', 'N'],
-        toggleNucleation: ['None', 'None'],
-        stage: ['S', 'S'],
-        toggleStage: ['None', 'None'],
-        verses: ['Shift V', 'Shift V'],
-        end: ['Shift B', 'Shift B'],
-        exitChallenge: ['Shift E', 'Shift E'],
-        supervoid: ['Shift S', 'Shift S'],
-        warp: ['Shift W', 'Shift W'],
-        pause: ['P', 'P'],
-        tabRight: ['Arrow Right', 'Arrow Right'],
-        tabLeft: ['Arrow Left', 'Arrow Left'],
-        subtabUp: ['Arrow Up', 'Arrow Up'],
-        subtabDown: ['Arrow Down', 'Arrow Down'],
-        stageRight: ['Shift Arrow Right', 'Shift Arrow Right'],
-        stageLeft: ['Shift Arrow Left', 'Shift Arrow Left']
-    },
+    hotkeys: [{
+        makeAll: 'M',
+        toggleAll: 'Shift A',
+        createAll: 'U',
+        discharge: 'D',
+        vaporization: 'V',
+        rank: 'R',
+        collapse: 'C',
+        galaxy: 'G',
+        merge: 'Shift M',
+        nucleation: 'N',
+        stage: 'S',
+        universe: 'Shift U',
+        end: 'Shift B',
+        exitChallenge: 'Shift E',
+        supervoid: 'Shift S',
+        warp: 'Shift W',
+        pause: 'P',
+        tabRight: 'Arrow Right',
+        tabLeft: 'Arrow Left',
+        subtabUp: 'Arrow Up',
+        subtabDown: 'Arrow Down',
+        stageRight: 'Shift Arrow Right',
+        stageLeft: 'Shift Arrow Left'
+    } as globalSaveType['hotkeys'][0]],
     numbers: {
         makeStructure: 'Numbers',
         toggleStructure: 'Numpad',
         enterChallenge: 'Shift Numbers'
-    },
-    toggles: [false, false, false, false, false, false, true, true, false],
+    } as globalSaveType['numbers'],
+    toggles: [false, false, false, false, false, false, true, false, false, false],
     format: ['.', ''],
     theme: null,
     fontSize: 16,
     MDSettings: [false, false, false, false],
     SRSettings: [false, false],
-    developerMode: false
+    developerMode: false,
+    version: 0
 };
 
 export const saveGlobalSettings = (noSaving = false): string => {
     const hotkeysClone = deepClone(globalSave.hotkeys);
     const encoder = new TextEncoder();
-    for (const key in hotkeysClone) {
-        const array = hotkeysClone[key as hotkeysList];
-        for (let i = 0; i < array.length; i++) {
-            array[i] = String.fromCharCode(...encoder.encode(array[i]));
+    for (let i = 0; i < 2; i++) {
+        const pointer = hotkeysClone[i];
+        for (const key in pointer) {
+            pointer[key as hotkeysList] = String.fromCharCode(...encoder.encode(pointer[key as hotkeysList]));
         }
     }
     const clone = { ...globalSave };
@@ -125,7 +116,7 @@ export const toggleSpecial = (number: number, type: 'global' | 'mobile' | 'reade
 export const specialHTML = { //Images here are from true vacuum for easier cache
     /** [textContent] */
     resetHTML: ['', 'Discharge', 'Vaporization', 'Rank', 'Collapse', 'Merge', 'Nucleation'],
-    longestBuilding: 7, //+1
+    lastBuilding: 7, //+1, starting value has to be biggest length
     /** [src] */
     buildingHTML: [
         [],
@@ -136,7 +127,7 @@ export const specialHTML = { //Images here are from true vacuum for easier cache
         ['Nebula.png', 'Star%20cluster.png', 'Galaxy.png'],
         ['Dark%20planet.png']
     ],
-    longestUpgrade: 14,
+    lastUpgrade: 14, //Starting value has to be biggest length
     /** [src] */
     upgradeHTML: [
         [], [
@@ -196,7 +187,7 @@ export const specialHTML = { //Images here are from true vacuum for easier cache
             'Missing.png'
         ]
     ],
-    longestResearch: 9,
+    lastResearch: 9, //Starting value has to be biggest length
     /** [src, className] */
     researchHTML: [
         [], [
@@ -244,7 +235,7 @@ export const specialHTML = { //Images here are from true vacuum for easier cache
             ['ResearchD4.png', 'stage3borderImage']
         ]
     ],
-    longestResearchExtra: 6,
+    lastResearchExtra: 6, //Starting value has to be biggest length
     /** [src, className, hoverText] */
     researchExtraDivHTML: [
         [],
@@ -298,7 +289,7 @@ export const specialHTML = { //Images here are from true vacuum for easier cache
             ['ResearchDark5.png', 'stage6borderImage']
         ]
     ],
-    longestFooterStats: 3,
+    lastFooterStat: 3, //Starting value has to be biggest length
     /** [src, className, textcontent] */
     footerStatsHTML: [
         [], [
@@ -341,9 +332,9 @@ export const specialHTML = { //Images here are from true vacuum for easier cache
         classMap: new Map<string, HTMLCollectionOf<HTMLElement>>(),
         queryMap: new Map<string, HTMLElement>()
     },
-    errorCooldowns: [] as string[],
+    errorCooldowns: new Set<string>(),
     /** [text, true ? incrementFunc : closeFunc] */
-    notifications: [] as Array<[string, (instantClose?: boolean) => void]>,
+    notifications: new Map<string, (close?: boolean) => void>(),
     /** [priority, closeFunc] */
     alert: [null, null] as [number | null, (() => void) | null],
     /** Function to update current hover text */
@@ -649,10 +640,21 @@ export const Alert = async(text: string, priority = 0): Promise<void> => {
         const confirm = getId('alertConfirm');
         blocker.style.display = '';
         body.classList.remove('noTextSelection');
+        const control = new AbortController();
         const oldFocus = document.activeElement as HTMLElement | null;
         confirm.focus();
 
-        const key = async(event: KeyboardEvent) => {
+        const close = () => {
+            if (!globalSave.toggles[2]) { body.classList.add('noTextSelection'); }
+            control.abort();
+            blocker.style.display = 'none';
+            specialHTML.alert = [null, null];
+            oldFocus?.focus();
+            resolve();
+        };
+        specialHTML.alert = [priority, close];
+        confirm.addEventListener('click', close, { signal: control.signal });
+        body.addEventListener('keydown', async(event: KeyboardEvent) => {
             const shift = detectShift(event);
             if (shift === null) { return; }
             const code = event.code;
@@ -663,19 +665,7 @@ export const Alert = async(text: string, priority = 0): Promise<void> => {
                 confirm.focus();
             } else { return; }
             event.preventDefault();
-        };
-        const close = () => {
-            if (!globalSave.toggles[2]) { body.classList.add('noTextSelection'); }
-            blocker.style.display = 'none';
-            body.removeEventListener('keydown', key);
-            confirm.removeEventListener('click', close);
-            specialHTML.alert = [null, null];
-            oldFocus?.focus();
-            resolve();
-        };
-        specialHTML.alert = [priority, close];
-        body.addEventListener('keydown', key);
-        confirm.addEventListener('click', close);
+        }, { signal: control.signal });
     });
 };
 
@@ -700,15 +690,27 @@ export const Confirm = async(text: string, priority = 0): Promise<boolean> => {
         blocker.style.display = '';
         cancel.style.display = '';
         body.classList.remove('noTextSelection');
+        const control = new AbortController();
         const oldFocus = document.activeElement as HTMLElement | null;
         (globalSave.toggles[8] ? cancel : confirm).focus();
 
         let result = false;
-        const yes = () => {
+        const close = () => {
+            if (!globalSave.toggles[2]) { body.classList.add('noTextSelection'); }
+            control.abort();
+            blocker.style.display = 'none';
+            cancel.style.display = 'none';
+            specialHTML.alert = [null, null];
+            oldFocus?.focus();
+            resolve(result);
+        };
+        specialHTML.alert = [priority, close];
+        cancel.addEventListener('click', close, { signal: control.signal });
+        confirm.addEventListener('click', () => {
             result = true;
             close();
-        };
-        const key = (event: KeyboardEvent) => {
+        }, { signal: control.signal });
+        body.addEventListener('keydown', (event: KeyboardEvent) => {
             const shift = detectShift(event);
             if (shift === null) { return; }
             const code = event.code;
@@ -717,27 +719,13 @@ export const Confirm = async(text: string, priority = 0): Promise<boolean> => {
                 close();
             } else if (code === 'Enter' || code === 'Space') {
                 if (shift || document.activeElement === cancel) { return; }
-                yes();
+                result = true;
+                close();
             } else if (code === 'Tab') {
                 (document.activeElement === cancel ? confirm : cancel).focus();
             } else { return; }
             event.preventDefault();
-        };
-        const close = () => {
-            if (!globalSave.toggles[2]) { body.classList.add('noTextSelection'); }
-            blocker.style.display = 'none';
-            cancel.style.display = 'none';
-            body.removeEventListener('keydown', key);
-            confirm.removeEventListener('click', yes);
-            cancel.removeEventListener('click', close);
-            specialHTML.alert = [null, null];
-            oldFocus?.focus();
-            resolve(result);
-        };
-        specialHTML.alert = [priority, close];
-        body.addEventListener('keydown', key);
-        confirm.addEventListener('click', yes);
-        cancel.addEventListener('click', close);
+        }, { signal: control.signal });
     });
 };
 
@@ -766,15 +754,28 @@ export const Prompt = async(text: string, placeholder = '', priority = 0): Promi
         body.classList.remove('noTextSelection');
         input.placeholder = placeholder;
         input.value = '';
+        const control = new AbortController();
         const oldFocus = document.activeElement as HTMLElement | null;
         input.focus();
 
         let result: null | string = null;
-        const yes = () => {
+        const close = () => {
+            if (!globalSave.toggles[2]) { body.classList.add('noTextSelection'); }
+            control.abort();
+            blocker.style.display = 'none';
+            cancel.style.display = 'none';
+            input.style.display = 'none';
+            specialHTML.alert = [null, null];
+            oldFocus?.focus();
+            resolve(result);
+        };
+        specialHTML.alert = [priority, close];
+        cancel.addEventListener('click', close, { signal: control.signal });
+        confirm.addEventListener('click', () => {
             result = input.value === '' ? input.placeholder : input.value;
             close();
-        };
-        const key = (event: KeyboardEvent) => {
+        }, { signal: control.signal });
+        body.addEventListener('keydown', (event: KeyboardEvent) => {
             const shift = detectShift(event);
             if (shift === null) { return; }
             const code = event.code;
@@ -784,7 +785,8 @@ export const Prompt = async(text: string, placeholder = '', priority = 0): Promi
             } else if (code === 'Enter' || code === 'Space') {
                 const active = document.activeElement;
                 if (shift || (code === 'Space' && active === input) || active === cancel) { return; }
-                yes();
+                result = input.value === '' ? input.placeholder : input.value;
+                close();
             } else if (code === 'Tab') {
                 const last = globalSave.toggles[8] ? confirm : cancel;
                 if (shift && document.activeElement === input) {
@@ -794,38 +796,14 @@ export const Prompt = async(text: string, placeholder = '', priority = 0): Promi
                 } else { return; }
             } else { return; }
             event.preventDefault();
-        };
-        const close = () => {
-            if (!globalSave.toggles[2]) { body.classList.add('noTextSelection'); }
-            blocker.style.display = 'none';
-            cancel.style.display = 'none';
-            input.style.display = 'none';
-            body.removeEventListener('keydown', key);
-            confirm.removeEventListener('click', yes);
-            cancel.removeEventListener('click', close);
-            specialHTML.alert = [null, null];
-            oldFocus?.focus();
-            resolve(result);
-        };
-        specialHTML.alert = [priority, close];
-        body.addEventListener('keydown', key);
-        confirm.addEventListener('click', yes);
-        cancel.addEventListener('click', close);
+        }, { signal: control.signal });
     });
 };
 
 export const Notify = (text: string) => {
     const notifications = specialHTML.notifications;
-
-    let index;
-    for (let i = 0; i < notifications.length; i++) {
-        if (notifications[i][0] === text) {
-            index = i;
-            break;
-        }
-    }
-
-    if (index === undefined) {
+    const present = notifications.get(text);
+    if (present === undefined) {
         let count = 1;
         let timeout: number;
 
@@ -836,9 +814,9 @@ export const Notify = (text: string) => {
         if (globalSave.SRSettings[0]) { html.role = 'alert'; }
         getId('notifications').append(html);
 
-        const pointer = notifications[notifications.push([text, (instantClose = false) => {
-            if (instantClose) {
-                if (html.style.animation === '') { remove(); }
+        notifications.set(text, (close = false) => {
+            if (close) {
+                if (timeout !== undefined) { remove(); }
                 return;
             }
             count++;
@@ -846,68 +824,61 @@ export const Notify = (text: string) => {
             if (timeout === undefined) { return; }
             clearTimeout(timeout);
             timeout = setTimeout(remove, 7200);
-        }]) - 1];
+        });
         const remove = () => {
-            const index = notifications.indexOf(pointer);
-            if (index !== -1) { notifications.splice(index, 1); }
-            html.removeEventListener('click', clickEvent);
+            notifications.delete(text);
             html.style.animation = 'hideX 800ms ease-in-out forwards';
             html.style.pointerEvents = 'none';
             setTimeout(() => html.remove(), 800);
             clearTimeout(timeout);
         };
-        const clickEvent = () => {
-            if (global.hotkeys.shift) { return remove(); }
-            for (let i = notifications.length - 1; i >= 0; i--) { notifications[i][1](true); }
-        };
         setTimeout(() => {
             html.style.animation = '';
             html.style.pointerEvents = '';
             timeout = setTimeout(remove, 7200);
-            html.addEventListener('click', clickEvent);
+            html.addEventListener('click', () => {
+                if (global.hotkeys.shift) { return remove(); }
+                for (const notification of notifications.values()) { notification(true); }
+            });
         }, 800);
-    } else { notifications[index][1](); }
+    } else { present(); }
 };
 
 /** Notify about error in the code with a cooldown of 20 seconds */
 export const errorNotify = (text: string) => {
     const errorCooldowns = specialHTML.errorCooldowns;
-    if (errorCooldowns.includes(text)) { return; }
+    if (errorCooldowns.has(text)) { return; }
 
     Notify(text);
-    errorCooldowns.push(text);
-    setTimeout(() => {
-        const index = errorCooldowns.indexOf(text);
-        if (index !== -1) { errorCooldowns.splice(index, 1); }
-    }, 2e4);
+    errorCooldowns.add(text);
+    setTimeout(() => { errorCooldowns.delete(text); }, 2e4);
 };
 
 export const resetMinSizes = (full = true) => {
     for (let i = 1; i <= 3; i++) {
         const element = getQuery(`#special${i} > p`);
-        specialHTML.cache.innerHTML.set(element, '');
+        specialHTML.cache.innerHTML.set(element, [0, 0]);
         element.style.minWidth = '';
     }
     for (let i = 0; i < global.researchesInfo[player.stage.active].maxActive; i++) {
-        const element = getQuery(`#research${i + 1} span`);
-        specialHTML.cache.innerHTML.set(element, '');
-        element.style.minWidth = '';
+        specialHTML.cache.innerHTML.set(`#research${i + 1}`, 0);
+        getQuery(`#research${i + 1} span`).style.minWidth = '';
     }
     for (let i = 0; i < global.researchesExtraInfo[player.stage.active].maxActive; i++) {
-        const element = getQuery(`#researchExtra${i + 1} span`);
-        specialHTML.cache.innerHTML.set(element, '');
-        element.style.minWidth = '';
+        specialHTML.cache.innerHTML.set(`#researchExtra${i + 1}`, 0);
+        getQuery(`#researchExtra${i + 1} span`).style.minWidth = '';
     }
 
     if (!full) { return; }
     const mile = getId('milestonesMultiline').parentElement as HTMLElement;
-    specialHTML.cache.innerHTML.set(mile, '');
+    specialHTML.cache.innerHTML.set(mile, 0);
     mile.style.minHeight = '';
 };
 
 export const changeFontSize = (initial = false) => {
     const input = getId('customFontSize') as HTMLInputElement;
-    const size = Math.min(Math.max(initial ? globalSave.fontSize : (input.value === '' ? 16 : Math.floor(Number(input.value) * 100) / 100), 12), 24);
+    let size = Math.min(Math.max(initial ? globalSave.fontSize : (input.value === '' ? 16 : Math.floor(Number(input.value) * 100) / 100), 12), 24);
+    if (!isFinite(size)) { size = 16; }
     if (!initial) {
         globalSave.fontSize = size;
         saveGlobalSettings();
@@ -1059,21 +1030,9 @@ export const enterQuantum = () => {
     const continuation = player.progress.quantum !== undefined;
     let finished = false;
     setTimeout(() => {
-        const cache: Record<string, Array<[string, () => any]>> = {};
-        const query = (which: string): HTMLElement => {
-            cache[which] ??= [];
-            return getQuery(which);
-        };
-        const addEvent = (which: string, eventType: string, event: (...any: any) => any) => {
-            const addTo = query(which);
-            cache[which].push([eventType, event]);
-            addTo.addEventListener(eventType, event);
-        };
-        const styleSheet = document.createElement('style');
-
         const oldTheme = globalSave.theme;
-        let timeoutID: undefined | number;
-        const intervalsID: Array<undefined | number> = [];
+        const control = new AbortController();
+        const styleSheet = document.createElement('style');
         const main = document.createElement('div');
         main.id = 'quantum';
         main.innerHTML = '<input type="image" src="Used_art/False%20vacuum.png" alt="Exit" draggable="false" id="leaveQuantum" class="interactiveImage" style="opacity: 0; cursor: help;">';
@@ -1081,20 +1040,11 @@ export const enterQuantum = () => {
         styleSheet.textContent = `#leaveQuantum { width: 48px; height: 48px; transition: opacity ${continuation ? 6 : 30}s; }`;
         document.body.append(main);
         document.head.append(styleSheet);
-        query('#leaveQuantum').addEventListener('click', () => {
-            clearTimeout(timeoutID);
-            clearTimeout(intervalsID[0]);
-            clearTimeout(intervalsID[1]);
-            for (const remove in cache) {
-                const pointer = cache[remove];
-                if (pointer.length > 0) {
-                    const element = getQuery(remove);
-                    for (let i = 0; i < pointer.length; i++) {
-                        element.removeEventListener(pointer[i][0], pointer[i][1]);
-                    }
-                }
-                specialHTML.cache.queryMap.delete(remove);
+        getId('leaveQuantum').addEventListener('click', () => {
+            for (let i = 0; i < intervalsID.length; i++) {
+                clearInterval(intervalsID[i]);
             }
+            control.abort();
             main.remove();
             styleSheet.remove();
             html.style.backgroundColor = '';
@@ -1104,14 +1054,17 @@ export const enterQuantum = () => {
             globalSave.theme = oldTheme;
             setTheme(finished ? -1 : undefined);
             pauseGame(false);
+            specialHTML.cache.idMap.clear();
+            specialHTML.cache.queryMap.clear();
         }, { once: true });
-        timeoutID = setTimeout(() => {
-            query('#leaveQuantum').style.opacity = '';
-            timeoutID = setTimeout(() => {
+
+        const intervalsID = [setTimeout(() => {
+            getId('leaveQuantum').style.opacity = '';
+            intervalsID[0] = setTimeout(() => {
                 styleSheet.textContent += ` html { transition: background-color ${continuation ? 6 : 120}s; }`;
                 html.style.background = '#041004';
-                query('#leaveQuantum').style.cursor = '';
-                timeoutID = setTimeout(() => {
+                getId('leaveQuantum').style.cursor = '';
+                intervalsID[0] = setTimeout(() => {
                     globalSave.theme = -1;
                     setTheme();
 
@@ -1120,9 +1073,9 @@ export const enterQuantum = () => {
                     div.id = 'quantizeMain';
                     styleSheet.textContent += ' #quantize { padding: 0 0.6em; }';
                     main.append(div);
-                    setTimeout(() => { query('#quantize').style.opacity = ''; }, 1_000);
-                    query('#quantize').addEventListener('click', () => {
-                        query('#quantize').style.transition = '';
+                    setTimeout(() => { getId('quantize').style.opacity = ''; }, 1_000);
+                    getId('quantize').addEventListener('click', () => {
+                        getId('quantize').style.transition = '';
                         const data: Quantum = {
                             active: null,
                             sliderTypes: ['foam', 'particles', 'quasiparts', 'gravitons', 'chronons'],
@@ -1223,9 +1176,9 @@ export const enterQuantum = () => {
                             input.type = 'number';
                             input.value = '12';
                             input.step = '1';
-                            query('#quantizeMain').append(input);
-                            addEvent('#quantizeInput', 'change', () => {
-                                const value = Math.min(Math.max(Number((query('#quantizeInput') as HTMLInputElement).value), 0), data.requirement.length - 1);
+                            getId('quantizeMain').append(input);
+                            getId('quantizeInput').addEventListener('change', () => {
+                                const value = Math.min(Math.max(Number((getId('quantizeInput') as HTMLInputElement).value), 0), data.requirement.length - 1);
                                 quantizeUser(isNaN(value) ? 12 : value);
                             });
                             styleSheet.textContent += `#quantizeMain { display: flex; }
@@ -1286,15 +1239,15 @@ export const enterQuantum = () => {
                         {
                             const cancel = () => { data.active = null; };
                             if (PC) {
-                                addEvent('html', 'mouseup', cancel);
-                                addEvent('html', 'mouseleave', cancel);
+                                html.addEventListener('mouseup', cancel, { signal: control.signal });
+                                html.addEventListener('mouseleave', cancel, { signal: control.signal });
                             }
                             if (MD) {
-                                addEvent('html', 'touchend', cancel);
-                                addEvent('html', 'touchcancel', cancel);
+                                html.addEventListener('touchend', cancel, { signal: control.signal });
+                                html.addEventListener('touchcancel', cancel, { signal: control.signal });
                             }
                             if (PC || SR) {
-                                addEvent('html', 'keyup', (event: KeyboardEvent) => {
+                                html.addEventListener('keyup', (event: KeyboardEvent) => {
                                     if (event.code === 'Space' || event.code === 'Enter') {
                                         data.active = null;
                                         return;
@@ -1302,8 +1255,8 @@ export const enterQuantum = () => {
 
                                     const numberTest = Number(event.code.replace('Digit', '').replace('Numpad', ''));
                                     if (!isNaN(numberTest) && data.active === data.sliderTypes[numberTest - 1]) { data.active = null; }
-                                });
-                                addEvent('html', 'keydown', (event: KeyboardEvent) => {
+                                }, { signal: control.signal });
+                                html.addEventListener('keydown', (event: KeyboardEvent) => {
                                     const activeType = (document.activeElement as HTMLInputElement)?.type;
                                     if (activeType === 'text' || activeType === 'number' || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) { return; }
 
@@ -1321,19 +1274,19 @@ export const enterQuantum = () => {
                                         } else { return; }
                                         event.preventDefault();
                                     }
-                                });
+                                }, { signal: control.signal });
                             }
                         }
                         for (const type of data.sliderTypes) {
                             const onClick = () => { data.active = type; };
                             if (PC) {
-                                addEvent(`#${type}Main`, 'mousedown', onClick);
+                                getId(`${type}Main`).addEventListener('mousedown', onClick);
                             }
                             if (MD) {
-                                addEvent(`#${type}Main`, 'touchstart', onClick);
+                                getId(`${type}Main`).addEventListener('touchstart', onClick);
                             }
                             if (PC || SR) {
-                                addEvent(`#${type}Main`, 'keydown', (event: KeyboardEvent) => {
+                                getId(`${type}Main`).addEventListener('keydown', (event: KeyboardEvent) => {
                                     if (event.code === 'Space' || event.code === 'Enter') { onClick(); }
                                 });
                             }
@@ -1352,22 +1305,22 @@ export const enterQuantum = () => {
                                 data.upgradesInfo.totalLevels = 0;
                                 for (let i = 0; i < data.upgrades.length; i++) { data.upgrades[i] = 0; }
                                 if (data.quantization < 0) { finished = true; }
-                                if (replay) { (query('#quantizeInput') as HTMLInputElement).value = `${data.quantization}`; }
+                                if (replay) { (getId('quantizeInput') as HTMLInputElement).value = `${data.quantization}`; }
                                 update1();
                                 update2();
                             }
                         };
-                        addEvent('#quantize', 'click', () => quantizeUser());
-                        addEvent('#autoVP', 'click', () => {
+                        getId('quantize').addEventListener('click', () => quantizeUser());
+                        getId('autoVP').addEventListener('click', () => {
                             data.auto[0] = !data.auto[0];
-                            query('#autoVP > span.bigWord').textContent = `${data.auto[0] ? 'Disable' : 'Enable'} auto Virtual particles`;
+                            getQuery('#autoVP > span.bigWord').textContent = `${data.auto[0] ? 'Disable' : 'Enable'} auto Virtual particles`;
                         });
-                        addEvent('#autoQP', 'click', () => {
+                        getId('autoQP').addEventListener('click', () => {
                             data.auto[1] = !data.auto[1];
-                            query('#autoQP > span.bigWord').textContent = `${data.auto[1] ? 'Disable' : 'Enable'} auto Quasiparticles`;
+                            getQuery('#autoQP > span.bigWord').textContent = `${data.auto[1] ? 'Disable' : 'Enable'} auto Quasiparticles`;
                         });
                         for (let i = 0; i < data.upgradesInfo.cost.length; i++) {
-                            addEvent(`#upgradeQ${i + 1}`, 'click', () => {
+                            getId(`upgradeQ${i + 1}`).addEventListener('click', () => {
                                 const cost = calculate.upgradeCost(i);
                                 if (data.foam < cost) { return; }
                                 const max = data.upgradesInfo.max[i]();
@@ -1385,10 +1338,10 @@ export const enterQuantum = () => {
                             let totalAutos = autoFoam ? 1 : 0;
                             if (autoParts) { totalAutos++; }
                             if (autoQuasi) { totalAutos++; }
-                            query('#quantize').textContent = data.foam >= data.requirement[data.quantization] ? 'Ready to Quantize' : `${format(data.requirement[data.quantization])} Quantum foam`;
+                            getId('quantize').textContent = data.foam >= data.requirement[data.quantization] ? 'Ready to Quantize' : `${format(data.requirement[data.quantization])} Quantum foam`;
                             let changed = false;
                             for (const type of data.sliderTypes) {
-                                query(`#${type}Main > span > span`).textContent = format(data[type], { padding: true });
+                                getQuery(`#${type}Main > span > span`).textContent = format(data[type], { padding: true });
                                 let base = calculate[type]();
                                 if (data.active === 'chronons') {
                                     if (type === 'chronons') {
@@ -1422,9 +1375,9 @@ export const enterQuantum = () => {
                                         base -= calculate.gravitonsUse();
                                     }
                                 }
-                                const last = query(`#${type}Main > span:last-of-type`);
+                                const last = getQuery(`#${type}Main > span:last-of-type`);
                                 last.textContent = format(base, { type: 'income' });
-                                const widthTest1 = query(`#${type}Main > span`).getBoundingClientRect().width;
+                                const widthTest1 = getQuery(`#${type}Main > span`).getBoundingClientRect().width;
                                 if (data.widthCache[0] < widthTest1) {
                                     data.widthCache[0] = widthTest1;
                                     changed = true;
@@ -1434,34 +1387,34 @@ export const enterQuantum = () => {
                                     data.widthCache[1] = widthTest2;
                                     changed = true;
                                 }
-                                const button = query(`#${type}Main > span:nth-of-type(2)`);
+                                const button = getQuery(`#${type}Main > span:nth-of-type(2)`);
                                 const next = `var(--${data.active === type ? 'green' : 'red'}-text)`;
                                 if (button.style.color !== next) { button.style.color = next; }
                             }
                             if (changed) {
                                 for (const type of data.sliderTypes) {
-                                    query(`#${type}Main > span`).style.minWidth = `${data.widthCache[0]}px`;
-                                    query(`#${type}Main > span:last-of-type`).style.minWidth = `${data.widthCache[1]}px`;
+                                    getQuery(`#${type}Main > span`).style.minWidth = `${data.widthCache[0]}px`;
+                                    getQuery(`#${type}Main > span:last-of-type`).style.minWidth = `${data.widthCache[1]}px`;
                                 }
                             }
                             for (let i = 0; i < data.upgradesInfo.cost.length; i++) {
-                                query(`#upgradeQ${i + 1} > span:last-of-type`).textContent = `${format(calculate.upgradeCost(i))} Quantum foam`;
+                                getQuery(`#upgradeQ${i + 1} > span:last-of-type`).textContent = `${format(calculate.upgradeCost(i))} Quantum foam`;
                             }
                         };
                         const update2 = () => {
                             const quantization = data.quantization;
-                            query('#quantizeMain').style.display = quantization >= 0 ? '' : 'none';
-                            query('#sliders').style.display = quantization > 0 ? '' : 'none';
-                            query('#particlesMain').style.display = quantization > 4 ? '' : 'none';
-                            query('#quasipartsMain').style.display = quantization > 8 ? '' : 'none';
-                            query('#gravitonsMain').style.display = quantization > 6 ? '' : 'none';
-                            query('#chrononsMain').style.display = quantization > 10 ? '' : 'none';
-                            query('#autoVP').style.display = data.upgrades[12] >= 1 ? '' : 'none';
-                            query('#autoQP').style.display = data.upgrades[19] >= 1 ? '' : 'none';
-                            const upgradesID = query('#upgradesQ');
+                            getId('quantizeMain').style.display = quantization >= 0 ? '' : 'none';
+                            getId('sliders').style.display = quantization > 0 ? '' : 'none';
+                            getId('particlesMain').style.display = quantization > 4 ? '' : 'none';
+                            getId('quasipartsMain').style.display = quantization > 8 ? '' : 'none';
+                            getId('gravitonsMain').style.display = quantization > 6 ? '' : 'none';
+                            getId('chrononsMain').style.display = quantization > 10 ? '' : 'none';
+                            getId('autoVP').style.display = data.upgrades[12] >= 1 ? '' : 'none';
+                            getId('autoQP').style.display = data.upgrades[19] >= 1 ? '' : 'none';
+                            const upgradesID = getId('upgradesQ');
                             upgradesID.style.display = quantization > 2 ? '' : 'none';
                             for (let i = 0; i < data.upgradesInfo.max.length; i++) {
-                                query(`#upgradeQ${i + 1}`).style.display = data.upgradesInfo.max[i]() > data.upgrades[i] ? '' : 'none';
+                                getId(`upgradeQ${i + 1}`).style.display = data.upgradesInfo.max[i]() > data.upgrades[i] ? '' : 'none';
                             }
                             const widthTest = upgradesID.getBoundingClientRect().width;
                             if (widthTest > data.widthCache[2]) {
@@ -1578,7 +1531,7 @@ export const enterQuantum = () => {
                     }, { once: true });
                 }, continuation ? 6_000 : 120_000); //Adds reset button
             }, continuation ? 2_000 : 30_000); //Changes theme
-        }, continuation ? 2_000 : 4_000); //Makes button visible
+        }, continuation ? 2_000 : 4_000)]; //Makes button visible
     }, continuation ? 0 : 6_000); //Adds exit button
 };
 
@@ -1591,20 +1544,22 @@ export const MDStrangenessPage = (stageIndex: number) => {
 export const checkProgress = () => {
     progressMain();
 
-    const universes = player.inflation.vacuum ? player.verses[0].true : player.verses[0].other[2];
-    if (universes > player.progress.universe) { player.progress.universe = universes; }
+    if (player.verses[0].true > player.progress.universes[1]) { player.progress.universes[1] = player.verses[0].true; }
+    if (player.verses[0].other[2] > player.progress.universes[0]) { player.progress.universes[0] = player.verses[0].other[2]; }
     const index = player.inflation.vacuum ? 1 : 0;
-    for (let i = player.progress.element[index] + 1; i < global.elementsInfo.maxActive; i++) {
+    for (let i = player.progress.element[index] + 1; i < global.elementsInfo.cost.length; i++) {
         if (player.elements[i] === 0) { break; }
         player.progress.element[index] = i;
     }
-    for (let i = player.progress.results; i < 1; i++) {
+    for (let i = player.progress.results; i < 2; i++) {
         if (player.merge.rewards[i] < 1) { break; }
         player.progress.results = i + 1;
     }
 };
 const progressMain = () => {
     const progress = player.progress.main;
+    if (progress >= 25 || global.offline.active) { return; }
+    if (player.verses[0].other[2] >= 1 || player.verses[0].other[0] >= 1) { return progressUp(25); }
     if (progress >= 24 || global.offline.active) { return; }
     if (player.inflation.ends[1] >= 1) { return progressUp(24); }
     if (progress >= 23) { return; }
@@ -1612,14 +1567,14 @@ const progressMain = () => {
     if (progress >= 22) { return; }
     if (player.verses[0].true >= 5) { return progressUp(22, 11); }
     if (progress >= 21) { return; }
-    if (player.cosmon[1].current > 0) { return progressUp(21); }
+    if (player.cosmon[1].total > 0) { return progressUp(21); }
     if (progress >= 20) { return; }
     if (player.inflation.vacuum) {
         if (player.verses[0].total >= 1) { return progressUp(20, 10); }
         if (progress >= 18) { return; }
         if (player.merge.resets >= 1) { return progressUp(18, 8); }
         if (progress >= 17) { return; }
-        if (player.stage.resets >= 1) { return progressUp(17, 7); }
+        if (player.strange[0].total > 0) { return progressUp(17, 7); }
         if (progress >= 16) { return; }
         if (player.stage.current >= 5) { return progressUp(16); }
         if (progress >= 15) { return; }
@@ -1633,7 +1588,7 @@ const progressMain = () => {
         if (progress >= 12) { return; }
         if (player.stage.resets >= 5) { return progressUp(12); }
         if (progress >= 11) { return; }
-        if (player.strange[0].current > 0) { return progressUp(11); }
+        if (player.strange[0].total > 0) { return progressUp(11); }
         if (progress >= 10) { return; }
         if (player.stage.active >= 5) { return progressUp(10, 5); }
         if (progress >= 9) { return; }
@@ -1734,17 +1689,17 @@ const playEvent = (event: number, replay = true) => {
     } else if (event === 6) {
         text = 'As Galaxies began to Merge, their combined Gravity pushed Vacuum out of its local minimum into a more stable global minimum. New forces and Structures are expected within this new and true Vacuum state.';
     } else if (event === 7) {
-        text = "With Vacuum decaying, the remaining matter had rearranged itself, which had lead to the formation of the very first Challenge ‒ 'Void'. Check it out in the 'Advanced' subtab.\n(There is no reason to stay inside Challenges past time limit)";
+        text = "With Vacuum decaying, the remaining matter had rearranged itself, which had lead to the formation of the very first Challenge ‒ 'Void'. Check it out in the Advanced subtab.\n(There is no reason to stay inside Challenges past time limit)";
     } else if (event === 8) {
         text = "As Galaxies began to Merge, their combined Gravity started forming an even bigger Structure ‒ 'Universe'. Will need to maximize Galaxies before every Merge to get enough Score to create it.\n(Merge reset can only be done a limited amount of times per Stage reset)";
     } else if (event === 9) {
-        text = "Now that current Universe is finished, it's time to Inflate a new one and so to unlock the 'Inflation' tab.\n(Universes only use specialized hotkeys. Also 'Nucleosynthesis' unlocks more Elements based on self-made Universes)";
+        text = "Now that current Universe is finished, it's time to Inflate a new one and so to unlock the Inflation tab.\n(Universes only use specialized hotkeys. Also 'Nucleosynthesis' unlocks more Elements based on self-made Universes)";
     } else if (event === 10) {
-        text = "Unlocked ability to End current Universes through basic End reset ‒ 'Big Crunch', also unlocked harder version of Void ‒ 'Supervoid' which is immune to End resets.\n(Will need to click the 'Void' button to toggle into Supervoid. Base for End resets reward is increased by +1 while inside true Vacuum)";
+        text = "Unlocked ability to End current Universes through basic End reset ‒ 'Big Crunch', also unlocked harder version of Void ‒ 'Supervoid' which is immune to End resets.\n(Base for End resets reward is increased by +1 while inside true Vacuum, not affected by multipliers)";
     } else if (event === 11) {
         text = "After so many Universe resets, false Vacuum had became at the same time more and less stable, this had unlocked a new Challenge ‒ 'Vacuum stability'.";
     } else if (event === 12) {
-        text = `${format(1000)} ${global.april.light ? 'Light' : 'Dark'} energy allows to do a more advanced End reset ‒ 'Big Rip', this one just adds non-self-made Universes into Cosmons gain base.\n(Doing it for the first time will also unlock new Inflation and ability to create new types of self-made Universes)`;
+        text = `${format(1000)} ${global.april.light ? 'Light' : 'Dark'} energy allows to do a more advanced End reset ‒ 'Big Rip', this one just adds non-self-made Universes into Cosmons gain base.\n(Doing it for the first time will also unlock new Inflation and false Vacuum Strangeness)`;
     }
     if (!replay) {
         text += "\n\n(Can be viewed again with 'Events' button in Settings tab)";
@@ -1771,8 +1726,16 @@ const addCloseEvents = (sectionHTML: HTMLElement, firstTargetHTML = null as HTML
     const body = document.documentElement;
     const closeButton = getId('closeBigWindow');
     const windowHMTL = getId('bigWindow');
+    const control = new AbortController();
     if (firstTargetHTML === null) { firstTargetHTML = closeButton; }
-    const key = (event: KeyboardEvent) => {
+    const close = () => {
+        control.abort();
+        specialHTML.bigWindow = null;
+        windowHMTL.style.display = 'none';
+        sectionHTML.style.display = 'none';
+    };
+    closeButton.addEventListener('click', close, { signal: control.signal });
+    body.addEventListener('keydown', (event: KeyboardEvent) => {
         if (specialHTML.alert[0] !== null || detectShift(event) !== false) { return; }
         const code = event.code;
         if (firstTargetHTML === closeButton ? (code === 'Escape' || code === 'Enter' || code === 'Space') :
@@ -1780,16 +1743,7 @@ const addCloseEvents = (sectionHTML: HTMLElement, firstTargetHTML = null as HTML
             event.preventDefault();
             close();
         }
-    };
-    const close = () => {
-        specialHTML.bigWindow = null;
-        windowHMTL.style.display = 'none';
-        sectionHTML.style.display = 'none';
-        body.removeEventListener('keydown', key);
-        closeButton.removeEventListener('click', close);
-    };
-    body.addEventListener('keydown', key);
-    closeButton.addEventListener('click', close);
+    }, { signal: control.signal });
     sectionHTML.style.display = '';
     windowHMTL.style.display = '';
     firstTargetHTML.focus();
@@ -1800,7 +1754,8 @@ export const openVersionInfo = () => {
     const mainHTML = buildBigWindow('versionHTML');
     if (mainHTML !== null) {
         mainHTML.innerHTML = `${global.lastUpdate !== null ? `<h5><span class="bigWord">Last update:</span> <span class="whiteText">${new Date(global.lastUpdate).toLocaleString()}</span></h5><br>` : ''}
-        <h6>v0.2.8</h6><p>- Abyss full rebalance and End reset rework\n- Auto Stage now has different modes\n- Max export rewards is now 12 hours\n- Removed log\n<a href="https://docs.google.com/document/d/1HsAhoa31UsRFGK3BULeXMKHN9exUIIQ_UveKwj2EuMY/edit?usp=sharing" target="_blank" rel="noopener noreferrer">Full changelog</a></p>
+        <h6>v0.2.9</h6><p>- Minor balancing and new content for Abyss\n<a href="https://docs.google.com/document/d/1HsAhoa31UsRFGK3BULeXMKHN9exUIIQ_UveKwj2EuMY/edit?usp=sharing" target="_blank" rel="noopener noreferrer">Full changelog</a></p>
+        <h6>v0.2.8</h6><p>- Abyss full rebalance and End reset rework\n- Auto Stage now has different modes\n- Max export rewards is now 12 hours\n- Removed log</p>
         <h6>v0.2.7</h6><p>- Small speed up to Universes\n- Stage resets now save peak Strange quarks</p>
         <h6>v0.2.6</h6><p>- New content (End)\n- Mobile shorcuts are now available outside of related support\n- Ability to change number hotkeys and use numbers for other hotkeys\n- Create all Upgrades button\n- Improved hover text\n\n- Added hotkeys for toggling autos</p>
         <h6>v0.2.5</h6><p>- Abyss rework\n- New (second) Challenge\n- Global footer stats\n- Small visual improvements\n- Improved swiping hotkeys for Phones</p>
@@ -1868,7 +1823,7 @@ export const openHotkeys = () => {
             <label id="mergeHotkey" class="darkvioletText"><button type="button" class="selectBtn"></button> ‒ <span class="whiteText">Merge</span></label>
             <label id="nucleationHotkey" class="orangeText"><button type="button" class="selectBtn"></button> ‒ <span class="whiteText">Nucleation</span></label>
             <label id="stageHotkey" class="stageText"><button type="button" class="selectBtn"></button> ‒ <span class="whiteText">Stage</span></label>
-            <label id="versesHotkey" class="darkvioletText"><button type="button" class="selectBtn"></button> ‒ <span class="whiteText">Verses</span></label>
+            <label id="universeHotkey" class="darkvioletText"><button type="button" class="selectBtn"></button> ‒ <span class="whiteText">Universe</span></label>
             <label id="endHotkey" class="redText"><button type="button" class="selectBtn"></button> ‒ <span class="whiteText">End</span></label>
             <label id="warpHotkey" class="blueText"><button type="button" class="selectBtn"></button> ‒ <span class="whiteText">Warp</span></label>
             <label id="pauseHotkey" class="grayText"><button type="button" class="selectBtn"></button> ‒ <span class="whiteText">pause</span></label>
@@ -1890,6 +1845,7 @@ export const openHotkeys = () => {
             <label id="toggleNucleationHotkey" class="orangeText"><button type="button" class="selectBtn"></button> ‒ <span class="whiteText">Nucleation</span></label>
             <label id="toggleStageHotkey" class="stageText"><button type="button" class="selectBtn"></button> ‒ <span class="whiteText">Stage</span></label>
             <label id="supervoidHotkey" class="darkvioletText"><button type="button" class="selectBtn"></button> ‒ <span class="whiteText">Void type</span></label>
+            <label id="toggleUniverseHotkey" class="darkvioletText"><button type="button" class="selectBtn"></button> ‒ <span class="whiteText">Universe</span></label>
         </div>
         <p>Holding Enter on last selected button will repeatedly press it, also works with Mouse and Touch events on some buttons</p>
         <p>Shift clicking the hotkey will set it to the default value or remove it</p>
@@ -1903,12 +1859,21 @@ export const openHotkeys = () => {
             #hotkeysHTML > div { display: grid; grid-template-columns: 1fr 1fr 1fr; width: 100%; gap: 0.3em; }
             #hotkeysHTML > div label { justify-self: center; width: max-content; }`;
 
-        const changeHotkey = async(number: boolean): Promise<string | string[] | null> => {
+        const changeHotkey = async(number: boolean): Promise<string | null> => {
             return await new Promise((resolve) => {
                 getId('hotkeysMessage').textContent = 'Awaiting new value for the hotkey';
                 const body = document.documentElement;
-                let result: null | string | string[] = null;
-                const detect = async(event: KeyboardEvent) => {
+                const control = new AbortController();
+                const finish = (keyboard = true) => {
+                    control.abort();
+                    if (keyboard) {
+                        body.addEventListener('keyup', () => { global.hotkeys.disabled = false; }, { once: true });
+                    } else { global.hotkeys.disabled = false; }
+                    resolve(result);
+                };
+                global.hotkeys.disabled = true;
+                let result: null | string = null;
+                body.addEventListener('keydown', async(event: KeyboardEvent) => {
                     const { key, code } = event;
                     if (code === 'Tab' || code === 'Enter' || code === 'Space') { return; }
                     event.preventDefault();
@@ -1930,96 +1895,95 @@ export const openHotkeys = () => {
                         }
                     } else {
                         if (code.includes('Digit') || code.includes('Numpad')) {
-                            const converted = prefix + code.replace('Digit', '').replace('Numpad', 'Num ');
-                            result = [converted, converted];
+                            result = prefix + code.replace('Digit', '').replace('Numpad', 'Num ');
                         } else {
-                            result = [key.length === 1 ? key.toUpperCase() : key.replaceAll(/([A-Z]+)/g, ' $1').trimStart(),
-                                key.length === 1 ? code.replace('Key', '') : code.replaceAll(/([A-Z]+)/g, ' $1').trimStart()];
-                            if (result[0] !== '') {
-                                result[0] = prefix + result[0];
-                            } else { result[0] = 'None'; }
-                            if (result[1] !== '') {
-                                result[1] = prefix + result[1];
-                            } else { result[1] = 'None'; }
+                            result = key.length === 1 ? (globalSave.toggles[0] ? key.toUpperCase() : code.replace('Key', '')) :
+                                (globalSave.toggles[0] ? key : code).replaceAll(/([A-Z]+)/g, ' $1').trimStart();
+                            result = result !== '' ? prefix + result : null;
                         }
                     }
                     finish();
-                };
-                const clickClose = () => {
-                    global.hotkeys.disabled = false;
-                    finish(false);
-                };
-                const finish = (keyboard = true) => {
-                    body.removeEventListener('keydown', detect);
-                    body.removeEventListener('click', clickClose, { capture: true });
-                    if (keyboard) {
-                        body.addEventListener('keyup', () => { global.hotkeys.disabled = false; }, { once: true });
-                    }
-                    resolve(result);
-                };
-                global.hotkeys.disabled = true;
-                body.addEventListener('keydown', detect);
-                body.addEventListener('click', clickClose, { capture: true });
+                }, { signal: control.signal });
+                body.addEventListener('click', () => { finish(false); }, { signal: control.signal, capture: true });
             });
         };
-        const index = globalSave.toggles[0] ? 0 : 1;
-        for (const key in globalSaveStart.hotkeys) {
+        for (const key of hotkeys.main) {
             const button = getQuery(`#${key}Hotkey button`);
-            button.textContent = globalSave.hotkeys[key as hotkeysList][index];
+            button.textContent = globalSave.hotkeys[globalSave.toggles[0] ? 0 : 1][key] ?? 'None';
             button.addEventListener('click', async(event) => {
-                const index = globalSave.toggles[0] ? 0 : 1;
-                let newHotkey: string[] | null;
+                const pointer = globalSave.hotkeys[globalSave.toggles[0] ? 0 : 1];
+                let assign = true;
+                let newHotkey: string | null;
                 if (event.shiftKey) {
-                    newHotkey = removeHotkey(globalSave.hotkeys[key as hotkeysList][index]) === null ?
-                        cloneArray(globalSaveStart.hotkeys[key as hotkeysList]) :
-                        newHotkey = globalSave.hotkeys[key as hotkeysList];
+                    if (hotkeys.active[pointer[key]] === undefined) {
+                        newHotkey = globalSaveStart.hotkeys[0][key];
+                    } else {
+                        newHotkey = pointer[key];
+                        assign = false;
+                    }
+                    if (newHotkey === undefined) { return; }
                 } else {
                     button.style.borderBottomStyle = 'dashed';
-                    newHotkey = await changeHotkey(false) as string[];
+                    newHotkey = await changeHotkey(false);
                     button.style.borderBottomStyle = '';
                     getId('hotkeysMessage').textContent = 'Highlighted hotkeys can be modified';
                     if (newHotkey === null) { return; }
                 }
-                const removed = removeHotkey(newHotkey[index]) as hotkeysList;
-                if (globalSaveStart.hotkeys[removed] !== undefined) { getQuery(`#${removed}Hotkey button`).textContent = 'None'; }
-                button.textContent = newHotkey[index];
-                globalSave.hotkeys[key as hotkeysList] = newHotkey;
-                button.textContent = newHotkey[index];
+                const removed = hotkeys.active[newHotkey] as hotkeysList;
+                if (removed !== undefined) {
+                    delete pointer[removed];
+                    getQuery(`#${removed}Hotkey button`).textContent = 'None';
+                }
+                if (assign) {
+                    button.textContent = newHotkey;
+                    pointer[key] = newHotkey;
+                }
+
                 assignHotkeys();
                 saveGlobalSettings();
             });
         }
         /** Actual type is Record<numbersList, string> */
-        const extraHotkeyName: Record<string, string> = {
+        const extraHotkeyName: Record<numbersList, string> = {
             makeStructure: 'makeAll',
             toggleStructure: 'toggleAll',
             enterChallenge: 'exitChallenge'
         };
-        for (const key in globalSaveStart.numbers) {
+        for (const key of hotkeys.numbers) {
             const button = getQuery(`#${key}Hotkey button`);
-            button.textContent = globalSave.numbers[key as numbersList];
-            getQuery(`#${extraHotkeyName[key]}Hotkey span`).textContent = globalSave.numbers[key as numbersList].replace('Numbers', '0').replace('Numpad', 'Num 0');
+            const value = globalSave.numbers[key] ?? 'None';
+            button.textContent = value;
+            getQuery(`#${extraHotkeyName[key]}Hotkey span`).textContent = value.replace('Numbers', '0').replace('Numpad', 'Num 0');
             button.addEventListener('click', async(event) => {
+                let assign = true;
                 let newHotkey: string | null;
                 if (event.shiftKey) {
-                    newHotkey = removeHotkey(globalSave.numbers[key as numbersList], true) === null ?
-                        globalSaveStart.numbers[key as numbersList] :
-                        globalSave.numbers[key as numbersList];
+                    if (hotkeys.active[globalSave.numbers[key]] === undefined) {
+                        newHotkey = globalSaveStart.numbers[key];
+                    } else {
+                        newHotkey = globalSave.numbers[key];
+                        assign = false;
+                    }
+                    if (newHotkey === undefined) { return; }
                 } else {
                     button.style.borderBottomStyle = 'dashed';
-                    newHotkey = await changeHotkey(true) as string;
+                    newHotkey = await changeHotkey(true);
                     button.style.borderBottomStyle = '';
                     getId('hotkeysMessage').textContent = 'Highlighted hotkeys can be modified';
                     if (newHotkey === null) { return; }
                 }
-                const removed = removeHotkey(newHotkey, true) as numbersList;
-                if (extraHotkeyName[removed] !== undefined) {
+                const removed = hotkeys.active[newHotkey] as numbersList;
+                if (removed !== undefined) {
+                    delete globalSave.numbers[removed];
                     getQuery(`#${removed}Hotkey button`).textContent = 'None';
                     getQuery(`#${extraHotkeyName[removed]}Hotkey span`).textContent = 'None';
                 }
-                button.textContent = newHotkey;
-                getQuery(`#${extraHotkeyName[key]}Hotkey span`).textContent = newHotkey.replace('Numbers', '0').replace('Numpad', 'Num 0');
-                globalSave.numbers[key as numbersList] = newHotkey;
+                if (assign) {
+                    button.textContent = newHotkey;
+                    getQuery(`#${extraHotkeyName[key]}Hotkey span`).textContent = newHotkey.replace('Numbers', '0').replace('Numpad', 'Num 0');
+                    globalSave.numbers[key] = newHotkey;
+                }
+
                 assignHotkeys();
                 saveGlobalSettings();
             });
@@ -2027,10 +1991,9 @@ export const openHotkeys = () => {
         getId('restoreHotkeys').addEventListener('click', () => {
             globalSave.hotkeys = deepClone(globalSaveStart.hotkeys);
             globalSave.numbers = deepClone(globalSaveStart.numbers);
-            const index = globalSave.toggles[0] ? 0 : 1;
-            for (const key in globalSave.hotkeys) { getQuery(`#${key}Hotkey button`).textContent = globalSave.hotkeys[key as hotkeysList][index]; }
-            for (const key in globalSave.numbers) {
-                const value = globalSave.numbers[key as numbersList];
+            for (const key of hotkeys.main) { getQuery(`#${key}Hotkey button`).textContent = globalSave.hotkeys[0][key] ?? 'None'; }
+            for (const key of hotkeys.numbers) {
+                const value = globalSave.numbers[key] ?? 'None';
                 getQuery(`#${key}Hotkey button`).textContent = value;
                 getQuery(`#${extraHotkeyName[key]}Hotkey span`).textContent = value.replace('Numbers', '0').replace('Numpad', 'Num 0');
             }

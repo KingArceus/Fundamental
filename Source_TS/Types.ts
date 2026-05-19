@@ -18,12 +18,14 @@ type upgrade = {
     name: string[]
     effectText: Array<() => string>
     cost: Overlimit[]
+    firstCost: Overlimit[]
     maxActive: number
 };
 /** Upgrades that do not use numbers */
 type upgrageAlt = {
     cost: number[]
-} & Omit<upgrade, 'cost'>;
+    firstCost: number[]
+} & Omit<upgrade, 'cost' | 'firstCost'>;
 type research = {
     name: string[]
     effectText: Array<() => string>
@@ -98,6 +100,7 @@ export interface playerType {
         vacuum: boolean
         resets: number
         age: number
+        /** [Big Crunches, Big Rips, Big Freezes] */
         ends: [number, number, number]
         time: number
         /** [Cosmons peak, peaked at] */
@@ -150,14 +153,13 @@ export interface playerType {
     challenges: {
         active: number | null
         void: number[]
-        voidCheck: number[]
         supervoid: number[]
         supervoidMax: number[]
         stability: number
     }
     toggles: {
         /** Stay till time out[0], Auto disable Vaporization[1], Auto disable Stage[2], Automatic leave[3],
-         * Auto accept Offline[4], Stay till no Merges[5] */
+         * Stay till no Merges[4], Allow Vacuum change[5], Reset Abyss[6] */
         normal: boolean[]
         /** Stage[0], Discharge[1], Vaporization[2], Rank[3], Collapse[4], Merge[5], End[6], Nucleation[7] */
         confirm: Array<'All' | 'Safe' | 'None'>
@@ -195,8 +197,10 @@ export interface playerType {
         element: [number, number]
         /** Used for showing Merge results related Void rewards */
         results: number
-        /** Highest reached basic self-made Universes for visuals */
-        universe: number
+        /** Highest reached Void rewards */
+        void: number[]
+        /** Highest reached basic self-made [false, true] Universes for visuals */
+        universes: number[]
         quantum?: number
     }
     clone: {
@@ -208,8 +212,7 @@ export interface playerType {
 export type gameTab = 'stage' | 'upgrade' | 'Elements' | 'strangeness' | 'inflation' | 'settings';
 export type gameSubtab = 'Structures' | 'Advanced' | //Stage tab
     'Upgrades' | 'Elements' | //Upgrade tab
-    'Matter' | 'Milestones' | //Strangeness tab
-    'Inflations' | 'Milestones' | //Inflation tab
+    'Matter' | 'Milestones' | //Strangeness & Inflation tabs
     'Settings' | 'Stats' | 'History'; //Settings tab
 
 export interface globalType {
@@ -225,18 +228,16 @@ export interface globalType {
     debug: {
         /** Notified about reaching time limit */
         timeLimit: boolean
-        /** To which Challenge game was adjusted\
-         * 0 ‒ Void;
-         * 1 ‒ Supervoid;
-         * 2 ‒ Stability;
-         */
-        challenge: number | null
         /** Which Rank is displayed */
         rankUpdated: number | null
         /** How many resets on last update */
         historyStage: number | null
         /** How many resets on last update */
         historyEnd: number | null
+        /** Which tabs were visited since last Stage update call */
+        visited: {
+            upgrade: boolean
+        }
         /** (Phones only) What page for Strangeness is selected */
         MDStrangePage: number
     }
@@ -273,7 +274,7 @@ export interface globalType {
     lastInflation: [number | null, number]
     lastMilestone: [number | null, number]
     lastChallenge: [number, number]
-    /** Void reward type[0], Strangeness shown[1] */
+    /** Void reward type[0], Strangeness shown[1], Vacuum information type[2] */
     sessionToggles: boolean[]
     /** Sorted cheapest first, -1 inserted to the start if auto is done */
     automatization: {
@@ -416,9 +417,8 @@ export interface globalType {
     elementsInfo: {
         name: string[]
         effectText: Array<() => string>
+        firstCost: Overlimit[]
         cost: Overlimit[]
-        /** Counts index [0] */
-        maxActive: number
     }
     strangenessInfo: Array<{
         name: string[]
@@ -426,7 +426,10 @@ export interface globalType {
         cost: number[]
         firstCost: number[]
         scaling: number[]
+        /** False Vacuum only, boolean represents of which Vacuum state scaling type is used */
+        scalingType: boolean[]
         max: number[]
+        /** Partually ignored in true Vacuum */
         maxActive: number
     }>
     /** Inflation tree */
@@ -463,8 +466,8 @@ export interface globalType {
         name: string
         description: () => string
         effectText: () => string
-        needText: string[]
-        rewardText: string[]
+        needText: string[][]
+        rewardText: string[][]
         resetType: 'vacuum'
         time: number
         color: string
@@ -487,19 +490,11 @@ export interface globalType {
     loadouts: {
         input: number[]
         open: boolean
-        /** Only used to remove events */
-        buttons: Array<[HTMLElement, () => void]>
     }
 }
 /** Important starting values for Vacuum states */
 export interface vacuumStartType {
-    true: {
-        upgradesS4: Overlimit[]
-        researchesS4: Overlimit[]
-        researchesS5: Overlimit[]
-        extrasS4: Overlimit[]
-        extrasS5: Overlimit[]
-    } & vacuumTemplate
+    true: vacuumTemplate
     false: vacuumTemplate
 }
 interface vacuumTemplate {
@@ -507,16 +502,19 @@ interface vacuumTemplate {
     build0Start: Overlimit[]
     buildS1Cost: number[]
     upgradesS1: number[]
-    /** For false Vacuum this is only cost for [5][3] (true Vacuum version is reused for Vacuum stability) */
+    /** First 3 Upgrades are skipped */
+    upgradesS4: Overlimit[]
+    /** First 3 Upgrades are skipped */
     upgradesS5: Overlimit[]
+    /** First 2 Researches are skipped */
+    researchesS5: Overlimit[]
+    /** First Research is skipped */
+    extrasS5: Overlimit[]
     researchesS1Cost: number[]
     researchesS1Scale: number[]
     ASRS1: number[]
     ASR3S3: number
-    /** For false Vacuum its cost only for some of Elements:\
-     * [0] ‒ [27];
-     * [1] ‒ [28];
-     */
+    /** First 26 Elements are skipped (first index is 27) */
     elements: Overlimit[]
     strangenessS1Cost: number[]
     strangenessS1Scale: number[]
@@ -528,6 +526,8 @@ interface vacuumTemplate {
     strangenessS4Scale: number[]
     strangenessS5Cost: number[]
     strangenessS5Scale: number[]
+    strangenessS6Cost: number[]
+    strangenessS6Scale: number[]
     /** Cost for other Upgrades\
      * [0] ‒ Upgrade cost [2][0];
      * [1] ‒ Research scale [2][2];
@@ -543,10 +543,11 @@ export interface globalSaveType {
         autoSave: number
     }
     /** hotkeyFunction: [key, code] */
-    hotkeys: Record<hotkeysList, string[]>
+    hotkeys: Array<Record<hotkeysList, string>>
     numbers: Record<numbersList, string>
     /** Hotkeys type[0], Elements as tab[1], Allow text selection[2], Footer on top[3], Hide global stats[4],
-     * Hide main scrollbar[5], Milestone notifications[6], Autosave on blur[7], Swap alert buttons[8] */
+     * Hide main scrollbar[5], Milestone notifications[6], Autosave on blur[7], Swap alert buttons[8],
+     * Auto accept Offline[9] */
     toggles: boolean[]
     /** Point[0], Separator[1] */
     format: [string, string]
@@ -557,6 +558,7 @@ export interface globalSaveType {
     /** Status[0], Keep tabindex on Upgrades[1] */
     SRSettings: boolean[]
     developerMode: boolean
+    version: number
 }
 
 export interface Quantum {
@@ -587,8 +589,8 @@ export interface Quantum {
     auto: boolean[]
 }
 
-export type hotkeysList = 'makeAll' | 'galaxy' | 'verses' | 'createAll' | 'strangeness' |
-    'toggleAll' | 'toggleUpgrades' | 'toggleStrangeness' |
+export type hotkeysList = 'makeAll' | 'galaxy' | 'universe' | 'createAll' | 'strangeness' |
+    'toggleAll' | 'toggleUpgrades' | 'toggleStrangeness' | 'toggleUniverse' |
     'discharge' | 'vaporization' | 'rank' | 'collapse' | 'nucleation' | 'merge' | 'stage' | 'end' |
     'toggleDischarge' | 'toggleVaporization' | 'toggleRank' | 'toggleCollapse' | 'toggleMerge' | 'toggleNucleation' | 'toggleStage' |
     'exitChallenge' | 'supervoid' | 'warp' | 'pause' |
@@ -648,9 +650,9 @@ export interface calculateEffectsType {
     S4Research4: (post?: boolean, level?: number) => number
     S4Extra1: () => number
     mergeRequirement: () => number
-    /** Returns 0 if Merge isn't unlocked */
     mergeMaxResets: (safe?: boolean) => number
-    reward: Array<(post?: boolean) => number>
+    /** Other is only for index 0 and its Clusters effect */
+    reward: Array<(post?: boolean, other?: number) => number>
     groupsCost: () => number
     mergeScore: () => number
     S5Upgrade0: () => number
@@ -658,9 +660,9 @@ export interface calculateEffectsType {
     S5Upgrade2: (post?: boolean, level?: number) => number
     S5Research2: () => number
     S5Research3: () => number
-    /** Level is global.mergeInfo.S5Extra2 if used for production and player.researchesExtra[5][2] + player.merge.rewards[1] if for Stage reset */
-    S5Extra2: (level: number, post?: boolean) => number
-    S5Extra4: (level?: number) => number
+    /** Level is global.mergeInfo.S5Extra2 if used for production and player.researchesExtra[5][2] if for Stage reset */
+    S5Extra2: (level: number, groups?: number) => number
+    S5Extra5: (level?: number) => number
     element6: () => number
     element24_power: () => number
     element24: () => Overlimit
