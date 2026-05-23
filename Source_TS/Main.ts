@@ -1916,9 +1916,11 @@ try { //Start everything
             Notify(`Found ${lower === 'secret_secret' ? "an ultra rare secret, but it doesn't proof anything" : `a ${lower === 'global_secret' ? 'global' : 'rare'} secret, don't share it with anybody`}`);
         } else if (lower === 'secret_proof') {
             Notify('Found a proof that you were looking for!');
-        } else if (globalSave.developerMode && value === 'April1st') {
-            enableApril();
-            Notify(`April mode ${global.april.active ? 'enabled' : 'disabled'}`);
+        } else if (lower === 'april') {
+            if (global.april.active) {
+                enableApril();
+                Notify('April mode is now disabled');
+            } else { Notify('April mode is already disabled'); }
         } else if (lower === (global.april.light ? 'dark' : 'light')) {
             enableLightness();
             Notify(`${global.april.light ? 'Lightness' : 'Darkness'} has returned`);

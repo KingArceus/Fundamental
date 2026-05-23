@@ -2225,7 +2225,7 @@ const autoResearches = (type: 'researches' | 'researchesExtra', stageIndex: numb
         if (!buyUpgrades(index, stageIndex, type, true)) { return; }
 
         const nextIndex = i - 1;
-        while (index !== auto[i] && i < auto.length) { i++; }
+        while (index !== auto[i]) { i++; }
         if (level[index] >= pointer.max[index]) {
             auto.splice(i, 1);
         } else {
@@ -2259,15 +2259,20 @@ const autoElements = () => {
 const autoStrangenessAdd = (stageIndex: number, which: number) => {
     const auto = global.automatization.autoS;
     const pointer = global.strangenessInfo;
-    if (pointer[stageIndex].max[which] <= player.strangeness[stageIndex][which] || auto.length === 0) { return; }
+    const length = auto.length;
+    if (pointer[stageIndex].max[which] <= player.strangeness[stageIndex][which] || length === 0) { return; }
     if (auto[0][0] === -1) {
         auto[0] = [which, stageIndex];
         return;
     }
     let index = 0;
     const current = pointer[stageIndex].cost[which];
-    while (index < auto.length && current > pointer[auto[index][1]].cost[auto[index][0]]) { index++; }
-    while (index < auto.length) {
+    while (index < length) {
+        const check = auto[index];
+        if (current <= pointer[check[1]].cost[check[0]]) { break; }
+        index++;
+    }
+    while (index < length) {
         const check = auto[index];
         if (current !== pointer[check[1]].cost[check[0]] || stageIndex < check[1] || (stageIndex === check[1] && which < check[0])) { break; }
         index++;
@@ -2276,7 +2281,8 @@ const autoStrangenessAdd = (stageIndex: number, which: number) => {
     if (index === 0) {
         auto.unshift([which, stageIndex]);
     } else {
-        if (auto[index - 1][1] === stageIndex && auto[index - 1][0] === which) { return; }
+        const check = auto[index - 1];
+        if (check[1] === stageIndex && check[0] === which) { return; }
         auto.splice(index, 0, [which, stageIndex]);
     }
 };
@@ -2313,16 +2319,21 @@ const autoStrangeness = () => {
         if (!checkUpgrade(index, stageIndex, 'strangeness')) { continue; }
         if (!buyStrangeness(index, stageIndex, 'strangeness', true)) { return; }
 
+        const length = auto.length;
         const nextIndex = i - 1;
-        while (main !== auto[i] && i < auto.length) { i++; }
+        while (main !== auto[i] && i < length) { i++; } //Length check is just in case
         if (level[stageIndex][index] >= pointer[stageIndex].max[index]) {
             auto.splice(i, 1);
         } else {
             const old = i;
             const current = pointer[stageIndex].cost[index];
             i++;
-            while (i < auto.length && current > pointer[auto[i][1]].cost[auto[i][0]]) { i++; }
-            while (i < auto.length) {
+            while (i < length) {
+                const check = auto[i];
+                if (current <= pointer[check[1]].cost[check[0]]) { break; }
+                i++;
+            }
+            while (i < length) {
                 const check = auto[i];
                 if (current !== pointer[check[1]].cost[check[0]] || stageIndex < check[1] || (stageIndex === check[1] && index < check[0])) { break; }
                 i++;
@@ -3392,9 +3403,7 @@ export const prepareDarkness = (enterExit = false as boolean | null, fullReset =
         infoR.maxActive = infoR.firstCost.length;
         infoE.maxActive = infoE.firstCost.length;
         if (enterExit) {
-            if (player.challenges.active === 0) {
-                for (let i = 0; i < infoU.maxActive; i++) { assignUpgradeCost(i, 6, 'upgrades'); }
-            }
+            for (let i = 0; i < infoU.maxActive; i++) { assignUpgradeCost(i, 6, 'upgrades'); }
             for (let i = 0; i < infoR.maxActive; i++) { assignMaxLevel(i, 6, 'researches'); }
             for (let i = 0; i < infoE.maxActive; i++) { assignMaxLevel(i, 6, 'researchesExtra'); }
             global.automatization.autoU[6] = [];

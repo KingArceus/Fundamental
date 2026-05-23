@@ -1170,7 +1170,12 @@ export const global: globalType = {
                 () => `Elements will no longer require Collapse for activation${player.inflation.vacuum ? ' and related automatization Research will cost as if its level is -1' : ''}.\nSecond level will unlock auto creation of Elements. (${global.strangenessInfo[4].max[6] > 1 ? 'Needs to be enabled in settings' : 'Not yet unlocked for Interstellar space'})`,
                 () => `${player.verses[0].current >= 13 ? 'Total' : 'Unspent'} Strange quarks will boost Interstellar by improving its Structures${global.strangenessInfo[4].max[7] > 1 ? ' at level 1 and by reducing cost of Brown dwarfs at level 2' : ''}.\n(Formula: Strange quarks ^${format(player.elements[26] >= 1 ? 0.32 : 0.16)}, exponent is 2 times bigger with '${global.elementsInfo.name[26]}' | Effect: ${format(global.strangeInfo.stageBoost[4], { padding: true })})${player.strangeness[4][7] < 2 && global.strangenessInfo[4].max[7] > 1 ? '\n(Level 2 of this Strangeness will increase cost scaling for every other Strange boost)' : ''}`,
                 () => `Increase effective amount of ${global.april.active ? 'Antineutron' : 'Neutron'} stars (doesn't include ones from '${global.elementsInfo.name[22]}') by 1 + level and improve ${global.april.active ? 'Antineutron' : 'Neutron'} stars strength by +^${format(0.125)}.`,
-                () => `Unlock yet another an even better new Upgrade:\nUpgrade ‒ '${player.strangeness[4][9] >= 1 || player.progress.main >= 18 ? 'Nucleosynthesis' : '(Unknown)'}', Collapse Research ‒ '${player.strangeness[4][9] >= 2 || player.progress.main >= 18 ? 'Quark-nova' : '(Unknown)'}', Stage Research ‒ '${player.strangeness[4][9] >= 3 || player.progress.main >= 18 ? 'Inner Black hole' : '(Unknown)'}'.`
+                () => { //[9]
+                    let unlocks = `Upgrade ‒ '${player.strangeness[4][9] >= 1 || player.progress.main >= 18 ? 'Nucleosynthesis' : '(Unknown)'}'`;
+                    if (global.strangenessInfo[4].max[9] >= 2) { unlocks += `, Collapse Research ‒ '${player.strangeness[4][9] >= 2 || player.progress.main >= 18 ? 'Quark-nova' : '(Unknown)'}'`; }
+                    if (global.strangenessInfo[4].max[9] >= 3) { unlocks += `, Stage Research ‒ '${player.strangeness[4][9] >= 3 || player.progress.main >= 18 ? 'Inner Black hole' : '(Unknown)'}'`; }
+                    return `Unlock yet another an even better new Upgrade:\n${unlocks}.`;
+                }
             ],
             cost: [],
             firstCost: [1, 2, 4, 2, 12, 6, 6, 24, 12000, 2.4e5],

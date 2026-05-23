@@ -334,7 +334,8 @@ export const numbersUpdate = (ignoreOffline = false) => {
                     producings[0] = ((softcap * (softcap + 24 * producings[0] * speed) + 8 * current * (2 * current + softcap)) ** 0.5 - softcap) / 4 - current;
                 } else { producings[0] *= speed; }
                 for (let i = 0; i < producings.length; i++) {
-                    getId(`verse${i}True`).textContent = `[${format(global.inflationInfo.trueUniverses, { padding: 'exponent' })}]`;
+                    const relevant = player.progress.main < 24 || (!player.inflation.vacuum && (player.tree[0][5] < 1 || challenge === 1)) ? player.verses[0].true : calculateEffects.trueUniverses();
+                    getId(`verse${i}True`).textContent = `[${format(relevant, { padding: 'exponent' })}${global.inflationInfo.trueUniverses !== relevant ? ` + ${format(global.inflationInfo.trueUniverses - relevant, { padding: 'exponent' })}` : ''}]`;
                     getId(`verse${i}Cur`).textContent = format(player.verses[i].current, { padding: 'exponent' });
                     getId(`verse${i}Prod`).textContent = format(producings[i], { padding: true });
 
@@ -348,7 +349,9 @@ export const numbersUpdate = (ignoreOffline = false) => {
                             lockText = "Requires 'Stability' Inflation";
                         }
                     } else if (challenge !== null) {
-                        if (global.challengesInfo[0].time < player.time[global.challengesInfo[0].resetType]) {
+                        if (player.progress.main < 24) {
+                            lockText = 'Disabled by the Challenge';
+                        } else if (global.challengesInfo[0].time < player.time[global.challengesInfo[0].resetType]) {
                             lockText = 'Out of Challenge time';
                         }
                     }
@@ -451,7 +454,7 @@ export const numbersUpdate = (ignoreOffline = false) => {
                 const information = global.strangeInfo.strangeletsInfo;
                 const canReset = stageResetCheck(5);
                 getId('strange1Effect1Stat0').textContent = `${format(information[0] * 100, { padding: true })}% of current${vacuum ? '' : ' Interstellar'} Strange quarks rate`;
-                getId('strange1Effect1Stat1').textContent = `Which is equal to ${format(canReset ? information[0] * mainGain / player.time.stage : 0, { type: 'income' })}${player.progress.main >= 19 ? ', not affected by global speed' : ''}`;
+                getId('strange1Effect1Stat1').textContent = `Which is equal to ${format(canReset ? information[0] * global.strangeInfo.strange0Gain / player.time.stage : 0, { type: 'income' })}${player.progress.main >= 19 ? ', not affected by global speed' : ''}`;
                 getId('strange1Effect2Stat').textContent = format(information[1], { padding: true });
             }
             if (getId('strange0EffectsMain').style.display !== 'none') {
@@ -1786,7 +1789,6 @@ export const getChallengeDescription = () => {
     getId('challengeActive').style.display = isActive ? '' : 'none';
 
     const unlocked = index !== 1 || player.progress.main >= 22;
-    const time = player.time[info.resetType];
     (nameID.parentElement as HTMLElement).style.display = unlocked ? '' : 'none';
     let text = !unlocked ? '' : `<p class="whiteText">${info.description()}</p>
     <article><h4 class="${info.color}Text bigWord">Effects:</h4>
@@ -1795,7 +1797,7 @@ export const getChallengeDescription = () => {
         const timerActive = isActive || index === 2;
         getId('challengeTimeLimit').style.display = '';
         getQuery('#challengeTimeLimit > span').textContent = timerActive ? 'Remaining time' : 'Time limit';
-        getQuery('#challengeTimeLimit > span:last-of-type').textContent = format(info.time - (timerActive ? time : 0), { type: 'time' });
+        getQuery('#challengeTimeLimit > span:last-of-type').textContent = format(info.time - (timerActive ? (index === 2 ? player.inflation.age : player.time[info.resetType]) : 0), { type: 'time' });
     } else { getId('challengeTimeLimit').style.display = 'none'; }
 
     if (index === 1) {
@@ -1804,8 +1806,8 @@ export const getChallengeDescription = () => {
         const gain = stable ? calculateEffects.trueUniverses() + 1 : 1;
         text += `${unlocked ? '<article>' : ''}<h3 class="darkorchidText bigWord">Vacuum information</h3>
         <p class="orchidText">Vacuum state: <span class="${vacuum ? 'greenText">true' : 'redText">false'}</span> | Resets: <span class="darkorchidText">${player.inflation.resets}</span></p>
-        ${player.progress.main >= 19 ? `<p class="darkvioletText">Current Inflatons gain: <span class="${stable ? 'green' : 'red'}Text">${format(gain, { padding: 'exponent' })}</span> | Rate: <span class="${vacuum ? 'green' : 'red'}Text">${format(gain / time, { type: 'income' })}</span></p>` : ''}
-        <p class="orchidText">Time since last reset: <span class="darkorchidText">${format(player.inflation.time, { type: 'time' })}</span>${player.progress.main >= 19 ? ` (Real: <span class="darkorchidText">${format(time, { type: 'time' })}</span>)` : ''}</p>${unlocked ? '</article>' : ''}`;
+        ${player.progress.main >= 19 ? `<p class="darkvioletText">Current Inflatons gain: <span class="${stable ? 'green' : 'red'}Text">${format(gain, { padding: 'exponent' })}</span> | Rate: <span class="${vacuum ? 'green' : 'red'}Text">${format(gain / player.time.vacuum, { type: 'income' })}</span></p>` : ''}
+        <p class="orchidText">Time since last reset: <span class="darkorchidText">${format(player.inflation.time, { type: 'time' })}</span>${player.progress.main >= 19 ? ` (Real: <span class="darkorchidText">${format(player.time.vacuum, { type: 'time' })}</span>)` : ''}</p>${unlocked ? '</article>' : ''}`;
     }
     assignInnerHTML('#challengeMultiline', text);
 };
