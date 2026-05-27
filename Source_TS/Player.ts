@@ -1859,9 +1859,7 @@ export const updatePlayer = (load: playerType, decode = true): string => {
             delete load.accretion['input' as keyof unknown];
 
             /* Can be shortened */
-            const stage = load.stage.current;
             load.stage = deepClone(playerStart.stage);
-            load.stage.current = stage;
             load.time = deepClone(playerStart.time);
             load.toggles = deepClone(playerStart.toggles);
             load.verses = deepClone(playerStart.verses);
@@ -1972,7 +1970,15 @@ export const updatePlayer = (load: playerType, decode = true): string => {
     if (load.time.export[0] < -3600_000) { load.time.export[0] = -3600_000; }
     if (load.time.offline < -3600_000) { load.time.offline = -3600_000; }
     if (load.time.excess < -1200_000) { load.time.excess = -1200_000; }
-    if (load.accretion.rank === 0) { load.buildings[3][0].current = '5.9722e27' as unknown as Overlimit; } //Required
+    if (load.inflation.vacuum) { //All of these are very important
+        if (load.stage.current < 4) {
+            if (load.accretion.rank >= 6) {
+                load.stage.current = 4;
+            } else if (load.stage.current < 2 && load.researchesExtra[1][2] >= 1) { load.stage.current = 2; }
+        }
+    } else if (load.accretion.rank === 0) { load.buildings[3][0].current = '5.9722e27' as unknown as Overlimit; }
+    if (load.stage.current < 5 && load.elements[26] >= 1) { load.elements[26] = 0; }
+    load.time.online = Math.floor(load.time.online);
 
     if (load.challenges.active !== null) {
         const clone = load.clone;

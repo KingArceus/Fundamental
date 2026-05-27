@@ -24,8 +24,8 @@ export const timeUpdate = (tick: number, timeWarp: null | number = null) => {
             return;
         } else { time.excess = 0; } //Must be before potential warp
         if (timeWarp > tick * 600) { return void simulateOffline(timeWarp, globalSave.toggles[9] || (timeWarp < 600_000 && !globalSave.developerMode)); }
+        time.online += timeWarp - timeWarp % 20;
         timeWarp -= tick;
-        time.online += tick;
     }
     const { auto, buildings: autoBuy } = player.toggles;
     const maxActive = global.buildingsInfo.maxActive;
@@ -2921,7 +2921,7 @@ const collapseResetCheck = (remnants = false): boolean => {
             }
         }
         const timeUntil = assignResetInformation.timeUntil();
-        if (timeUntil > 0 && timeUntil < collapse.input[1]) { return false; }
+        if (timeUntil > 0 && (timeUntil < collapse.input[1] || collapse.input[1] >= 1e60)) { return false; }
         while (info.pointsLoop < collapse.points.length) {
             const point = collapse.points[info.pointsLoop];
             if (point > info.newMass || (point > 40 && player.strangeness[5][4] < 1)) { break; }
