@@ -425,14 +425,15 @@ export const toggleConfirm = (number: number, change = false) => {
 };
 
 const repeatFunction = (repeat: () => any) => {
-    if (global.intervalsId.mouseRepeat !== undefined) { return; }
-    global.intervalsId.mouseRepeat = setTimeout(() => {
-        global.intervalsId.mouseRepeat = setInterval(repeat, 50);
+    if (global.intervalsId.repeat !== undefined) { return; }
+    global.intervalsId.repeat = setTimeout(() => {
+        global.intervalsId.repeat = setInterval(repeat, 50);
     }, 200);
 };
 const cancelRepeat = () => {
-    clearInterval(global.intervalsId.mouseRepeat);
-    global.intervalsId.mouseRepeat = undefined;
+    if (global.intervalsId.repeat === undefined) { return; }
+    clearInterval(global.intervalsId.repeat);
+    global.intervalsId.repeat = undefined;
 };
 
 /** Prevents element from going offscreen, for now only works for centered labels */
@@ -1434,8 +1435,8 @@ try { //Start everything
         if (PC) { button.addEventListener('dblclick', dblclickFunc); }
         if (MD) {
             button.addEventListener('touchstart', () => {
-                if (global.intervalsId.mouseRepeat !== undefined) { return; }
-                global.intervalsId.mouseRepeat = setTimeout(dblclickFunc, 3000);
+                if (global.intervalsId.repeat !== undefined) { return; }
+                global.intervalsId.repeat = setTimeout(dblclickFunc, 3000);
             });
         }
     }

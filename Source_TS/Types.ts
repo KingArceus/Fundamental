@@ -366,7 +366,7 @@ export interface globalType {
         numbers: number | undefined
         visual: number | undefined
         autoSave: number | undefined
-        mouseRepeat: number | undefined
+        repeat: number | undefined
     }
     buildingsInfo: {
         /** Counts index [0] */

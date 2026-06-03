@@ -2913,9 +2913,9 @@ const collapseResetCheck = (remnants = false): boolean => {
         if (!player.toggles.auto[4]) { return false; }
 
         if (player.strangeness[5][4] >= 1 && player.toggles.buildings[5][3] && player.researchesExtra[5][0] >= 1) {
-            let newMass = info.newMass;
-            if (level < 2 && player.verses[0].current >= 2) { newMass *= calculateEffects.star[2](true) / effectsCache.star[2]; }
-            if (calculateBuildingsCost(3, 5).toNumber() <= newMass) {
+            let galaxyCost = calculateBuildingsCost(3, 5).toNumber();
+            if (level < 2 && player.verses[0].current >= 2 && (!player.inflation.vacuum || galaxyCost > global.collapseInfo.solarCap)) { galaxyCost /= calculateEffects.star[2](true) / effectsCache.star[2]; }
+            if (galaxyCost <= info.newMass) {
                 collapseReset();
                 return true;
             }

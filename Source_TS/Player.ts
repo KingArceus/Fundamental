@@ -289,7 +289,7 @@ export const global: globalType = {
         numbers: undefined,
         visual: undefined,
         autoSave: undefined,
-        mouseRepeat: undefined
+        repeat: undefined
     },
     buildingsInfo: {
         maxActive: [0, 4, 6, 5, 5, 4, 2], //[5, 6] is required
