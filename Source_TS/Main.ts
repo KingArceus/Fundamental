@@ -2,7 +2,7 @@ import { player, global, updatePlayer, prepareVacuum, fillMissingValues, vacuumS
 import { getUpgradeDescription, switchTab, numbersUpdate, visualUpdate, format, getChallengeDescription, stageUpdate, updateCollapsePoints, getChallengeRewards } from './Update';
 import { assignBuildingsProduction, buyBuilding, buyStrangeness, buyStrangenessMax, buyUpgrades, buyVerse, calculateTreeCost, collapseResetUser, dischargeResetUser, endResetUser, enterExitChallengeUser, inflationRefund, mergeResetUser, nucleationResetUser, rankResetUser, setActiveStage, stageResetUser, switchStage, timeUpdate, toggleChallengeType, vaporizationResetUser } from './Stage';
 import { Alert, Prompt, setTheme, changeFontSize, changeFormat, specialHTML, replayEvent, Confirm, preventImageUnload, Notify, MDStrangenessPage, globalSave, toggleSpecial, saveGlobalSettings, openHotkeys, openVersionInfo, errorNotify, enableApril, enableLightness, resetMinSizes } from './Special';
-import { assignHotkeys, buyAll, createAll, detectHotkey, detectShift, handleTouchHotkeys, hotkeys, offlineWarp, strangenessAll, toggleAll, toggleShift } from './Hotkeys';
+import { assignHotkeys, buyAll, createAll, detectHotkey, detectShift, handleTouchHotkeys, hotkeys, offlineWarp, timeWarp, strangenessAll, toggleAll, toggleShift } from './Hotkeys';
 import { checkUpgrade, stageResetType } from './Check';
 import type { hotkeysList } from './Types';
 import Overlimit from './Limit';
@@ -2013,6 +2013,9 @@ try { //Start everything
         button.addEventListener('touchstart', () => repeatFunction(offlineWarp));
         if (PC) { button.addEventListener('mousedown', () => repeatFunction(offlineWarp)); }
     }
+    getId('timeWarp1Min').addEventListener('click', () => timeWarp(60_000));
+    getId('timeWarp10Min').addEventListener('click', () => timeWarp(600_000));
+    getId('timeWarp1Hour').addEventListener('click', () => timeWarp(3_600_000));
     getId('customFontSize').addEventListener('change', () => changeFontSize());
 
     getId('stageHistorySave').addEventListener('change', () => {

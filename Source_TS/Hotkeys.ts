@@ -322,6 +322,11 @@ export const offlineWarp = () => {
     void simulateOffline(60_000, true);
 };
 
+export const timeWarp = (milliseconds: number) => {
+    if (global.offline.active) { return; }
+    void simulateOffline(milliseconds, true);
+};
+
 const changeTab = (direction: 'left' | 'right') => {
     const tabs = global.tabs.list;
     let index = tabs.indexOf(global.tabs.current);

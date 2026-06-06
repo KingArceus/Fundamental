@@ -325,6 +325,33 @@ h1, h2, h3, h4, h5, h6 { font-weight: normal; }
 
 #notifications > p:not(:first-of-type) { margin-top: -2px; }
 
+#timeWarpContainer {
+    position: fixed;
+    bottom: 2em;
+    right: 2em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    z-index: 5;
+    pointer-events: auto;
+}
+
+.timeWarpButton {
+    width: 8em;
+    padding: 0.5em 1em;
+    background-color: var(--button-color);
+    border: 2px solid var(--button-border);
+    color: var(--button-text);
+    border-radius: 7px;
+    font-size: 0.84em;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.timeWarpButton:hover {
+    background-color: var(--button-hover);
+}
+
 .hasTitle { cursor: help; }
 label { cursor: pointer !important; }
 label:has(input[type = "number"], input[type = "text"]) { cursor: text !important; }
