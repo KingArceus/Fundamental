@@ -2013,6 +2013,51 @@ try { //Start everything
         button.addEventListener('touchstart', () => repeatFunction(offlineWarp));
         if (PC) { button.addEventListener('mousedown', () => repeatFunction(offlineWarp)); }
     }
+    const makeMovableTimeWarpWindow = () => {
+        const container = getId('timeWarpContainer');
+        const handle = getId('timeWarpHandle');
+        let startX = 0;
+        let startY = 0;
+        let startLeft = 0;
+        let startTop = 0;
+
+        const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+        const updatePosition = (x: number, y: number) => {
+            const width = container.getBoundingClientRect().width;
+            const height = container.getBoundingClientRect().height;
+            const maxX = document.documentElement.clientWidth - width;
+            const maxY = document.documentElement.clientHeight - height;
+            container.style.left = `${clamp(x, 0, maxX)}px`;
+            container.style.top = `${clamp(y, 0, maxY)}px`;
+            container.style.right = 'auto';
+            container.style.bottom = 'auto';
+        };
+
+        handle.addEventListener('pointerdown', (event: PointerEvent) => {
+            if (event.button !== 0) { return; }
+            startX = event.clientX;
+            startY = event.clientY;
+            const rect = container.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            handle.setPointerCapture(event.pointerId);
+            container.classList.add('dragging');
+
+            const move = (moveEvent: PointerEvent) => {
+                updatePosition(startLeft + moveEvent.clientX - startX, startTop + moveEvent.clientY - startY);
+            };
+
+            const end = () => {
+                container.classList.remove('dragging');
+                document.removeEventListener('pointermove', move);
+                document.removeEventListener('pointerup', end);
+            };
+
+            document.addEventListener('pointermove', move);
+            document.addEventListener('pointerup', end, { once: true });
+        });
+    };
+    makeMovableTimeWarpWindow();
     getId('timeWarp1Min').addEventListener('click', () => timeWarp(60_000));
     getId('timeWarp10Min').addEventListener('click', () => timeWarp(600_000));
     getId('timeWarp1Hour').addEventListener('click', () => timeWarp(3_600_000));

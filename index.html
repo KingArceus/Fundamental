@@ -43,9 +43,12 @@
         <article id="notifications" aria-live="polite" role="none"></article>
         <aside id="hoverWindow" class="whiteText" style="display: none;" aria-label="Hover text"></aside>
         <aside id="timeWarpContainer" class="timeWarpContainer" aria-label="Time warp buttons">
-            <button type="button" id="timeWarp1Min" class="timeWarpButton">+1 min</button>
-            <button type="button" id="timeWarp10Min" class="timeWarpButton">+10 min</button>
-            <button type="button" id="timeWarp1Hour" class="timeWarpButton">+1 hour</button>
+            <div id="timeWarpHandle" class="timeWarpHandle" role="button" tabindex="0" aria-label="Drag time warp box">Time Warp</div>
+            <div class="timeWarpButtons">
+                <button type="button" id="timeWarp1Min" class="timeWarpButton">+1 min</button>
+                <button type="button" id="timeWarp10Min" class="timeWarpButton">+10 min</button>
+                <button type="button" id="timeWarp1Hour" class="timeWarpButton">+1 hour</button>
+            </div>
         </aside>
         <main id="body" style="display: none;">
             <section id="stageTab" role="none">
