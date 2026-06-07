@@ -11,6 +11,8 @@ import { format, numbersUpdate, stageUpdate, switchTab, visualUpdate } from './U
 export const timeUpdate = (tick: number, timeWarp: null | number = null) => {
     const { time, ASR } = player;
     if (timeWarp !== null) {
+        time.export[0] += tick;
+        time.online += tick - tick % 20;
         timeWarp -= tick;
     } else {
         const currentTime = Date.now();
